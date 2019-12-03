@@ -1,0 +1,12 @@
+{
+  "name": "firebase-emulator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "setup": "firebase setup:emulators:firestore"
+  },
+  "dependencies": {
+    "firebase-tools": "^7.8.1"
+  }
+}
