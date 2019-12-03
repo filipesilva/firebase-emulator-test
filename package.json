@@ -1,10 +1,9 @@
 {
-  "name": "firebase-emulator",
+  "name": "firebase-emulator-test",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "yarn firebase emulators:start"
+    "emulators": "yarn firebase emulators:start"
   },
   "dependencies": {
     "firebase-admin": "^8.8.0",
