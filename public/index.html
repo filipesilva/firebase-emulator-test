@@ -8,6 +8,7 @@
 
 <body>
   <script src="https://www.gstatic.com/firebasejs/7.5.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.5.0/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.5.0/firebase-firestore.js"></script>
   <script>
     // Your web app's Firebase configuration.
@@ -21,25 +22,12 @@
       messagingSenderId: "901180520467",
       appId: "1:901180520467:web:0405fb76e4fa189f0167e6"
     };
+
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
-
-    // Connect to the firestore database.
-    var db = firebase.firestore();
-
-    // Set the emulator firestore db address.
-    // Taken from https://github.com/firebase/firebase-js-sdk/blob/a547892d13b74f1467c92639522d9c43d5e20dc4/packages/testing/src/api/index.ts#L156-L159
-    // Doesn't seem meant to be used in the browser. But it works.
-    db.settings({
-      // Address taken from the firestore emulator logs:
-      //   i  firestore: Serving ALL traffic (including WebChannel) on http://localhost:8080
-      //   !  firestore: Support for WebChannel on a separate port (8081) is DEPRECATED and will go away soon. Please use port above instead.
-      //   i  firestore: Emulator logging to firestore-debug.log
-      //   +  firestore: Emulator started at http://localhost:8080
-      //   i  firestore: For testing set FIRESTORE_EMULATOR_HOST=localhost:8080
-      host: 'localhost:8080',
-      ssl: false
-    });
+    
+    // Configure use of emulators.
+    var useEmulators = true;
 
     // Set some test data.
     var user = {
@@ -48,16 +36,74 @@
       born: 1815
     };
 
-    // Add a user and log the ref.
-    db.collection("users").add(user)
-      .then(docRef => console.log("Document written with ID: ", docRef.id))
-      .catch(error => console.error("Error adding document: ", error))
-      // Get all users.
-      .then(() => console.log('Listing all documents:'))
-      .then(() => db.collection("users").get())
-      .then(querySnapshot => querySnapshot.forEach(doc =>
-        console.log(`  ${doc.id} => ${JSON.stringify(doc.data())}`)))
-      .catch(error => console.error("Error getting collection: ", error))
+    // Test Firestore and Database.
+    testFirestore();
+    testDatabase();
+
+    function testFirestore() {
+      // Connect to the firestore database.
+      var db = firebase.firestore();
+
+      if (useEmulators) {
+        // Set the emulator firestore db address.
+        // Taken from https://github.com/firebase/firebase-js-sdk/blob/a547892d13b74f1467c92639522d9c43d5e20dc4/packages/testing/src/api/index.ts#L156-L159
+        // Doesn't seem meant to be used in the browser. But it works.
+        db.settings({
+          // Address taken from the firestore emulator logs:
+          //   i  firestore: Serving ALL traffic (including WebChannel) on http://localhost:8080
+          //   !  firestore: Support for WebChannel on a separate port (8081) is DEPRECATED and will go away soon. Please use port above instead.
+          //   i  firestore: Emulator logging to firestore-debug.log
+          //   +  firestore: Emulator started at http://localhost:8080
+          //   i  firestore: For testing set FIRESTORE_EMULATOR_HOST=localhost:8080
+          host: 'localhost:8080',
+          ssl: false
+        });
+      }
+
+      // Set some test data.
+      var user = {
+        first: "Ada",
+        last: "Lovelace",
+        born: 1815
+      };
+
+      // Add a user and log the ref.
+      db.collection("users").add(user)
+        .then(docRef => console.log("Firestore - Document written with ID: ", docRef.id))
+        .catch(error => console.error("Firestore - Error adding document: ", error))
+        // Get all users.
+        .then(() => console.log('Firestore - Listing all documents:'))
+        .then(() => db.collection("users").get())
+        .then(querySnapshot => querySnapshot.forEach(doc =>
+          console.log(`Firestore -   ${doc.id} => ${JSON.stringify(doc.data())}`)))
+        .catch(error => console.error("Firestore - Error getting collection: ", error))
+    }
+
+    function testDatabase() {  
+      var localDbFirebaseConfig = {...firebaseConfig};
+      if (useEmulators) {
+        // Set the emulator realtime db address.
+        // Taken from https://github.com/firebase/firebase-js-sdk/blob/ae319059e4a083a613a2999c1e61d44c9053a0d7/packages/database/src/core/RepoManager.ts#L116
+        // Doesn't seem meant to be used in the browser. But it works.    
+        localDbFirebaseConfig.databaseURL = `http://localhost:9000?ns=${firebaseConfig.projectId}`;
+      }
+      // Initialize another Firebase to use the modified config.
+      var databaseApp = firebase.initializeApp(localDbFirebaseConfig, 'database-test');
+      // Connect to the realtime database.
+      var db = databaseApp.database();
+
+      // Add a user and log the key.
+      db.ref('users/').push(user)
+        .then(docRef => console.log("Database - child written with key: ", docRef.key))
+        .catch(error => console.error("Database - Error adding child: ", error))
+        // Get all users.
+        .then(() => console.log('Database - Listing all children:'))
+        .then(() => db.ref('users/').once('value'))
+        .then(snapshot => snapshot.forEach(doc =>
+          console.log(`Database -   ${doc.key} => ${JSON.stringify(doc)}`)))
+        .catch(error => console.error("Database - Error getting data: ", error))
+    }
+
   </script>
 </body>
 

@@ -10,11 +10,8 @@ This doesn't seem to be a public API for web clients.
 - see `public/index.html` for script source code
 - run `yarn emulators`
 - open http://localhost:5000, see the console logs for added documents
-- remove the `db.settings({...})` code from index and reload, you should see the error below that shows now you're trying to connect to the real database.
-```
-(index):54 Error adding document:  FirebaseError: Missing or insufficient permissions.
-```
-- restore the `db.settings({...})` code, see the documents again
+- set `var useEmulators = false` in index and reload, you should see errors that shows now you're trying to connect to the real database but don't have permissions.
+- restore the `var useEmulators = true`, see the documents again
 - stop the `yarn emulators` process, start it again, see the db was reset
 
 ## Setup outside this repo
@@ -46,6 +43,16 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
+  }
+}
+```
+- add a realtime database with the following rules to deny all:
+```json
+{
+  /* Visit https://firebase.google.com/docs/database/security to learn more about security rules. */
+  "rules": {
+    ".read": false,
+    ".write": false
   }
 }
 ```
